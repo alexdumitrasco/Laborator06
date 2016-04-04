@@ -85,14 +85,37 @@ public class SingleThreadedServerActivity extends Activity {
 		@Override
 		public void run() {
 			try {
+
 				serverSocket = new ServerSocket(Constants.SERVER_PORT);
+
 				while (isRunning) {
-					Socket socket = serverSocket.accept();
+					final Socket socket = serverSocket.accept();
 					Log.v(Constants.TAG, "Connection opened with "+socket.getInetAddress()+":"+socket.getLocalPort());
-					PrintWriter printWriter = Utilities.getWriter(socket);
+					new Thread () { 
+						public void run () {
+					PrintWriter printWriter = null;
+					try {
+						printWriter = Utilities.getWriter(socket);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 					printWriter.println(serverTextEditText.getText().toString());
-					socket.close();
+					try {
+						socket.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					Log.v(Constants.TAG, "Connection closed");
+						}
+					}.run();
 				}
 			} catch (IOException ioException) {
 				Log.e(Constants.TAG, "An exception has occurred: "+ioException.getMessage());
@@ -112,6 +135,8 @@ public class SingleThreadedServerActivity extends Activity {
 		serverTextEditText.addTextChangedListener(serverTextContentWatcher);
 	}
 
+
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
